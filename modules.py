@@ -157,8 +157,9 @@ def draw_bbox(img, page_objects, output_path):
         color = colors[obj_type]
         # バウンディングボックスの中心座標を計算
         center = (int((xmin + xmax) / 2), int((ymin + ymax) / 2))
-        print(f"type:{obj_type}, xmin:{xmin}, ymin:{ymin}, xmax:{xmax}, ymax:{ymax}, center:{center}")
+        # print(f"type:{obj_type}, xmin:{xmin}, ymin:{ymin}, xmax:{xmax}, ymax:{ymax}, center:{center}")
         cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
+    return img
     cv2.imshow("img", img)
     # cv2.imwrite(output_path, img)
     cv2.waitKey(0)

@@ -3,74 +3,72 @@ import os
 import cv2
 from modules import *
 
-def get_bubble_order(panel_coords, bubble_coords):
-    """
-    panel_coords: コマの座標 (x1, y1, x2, y2)
-    bubble_coords: 吹き出しの座標のリスト [(x1, y1, x2, y2), ...]
-    return: 吹き出しの順序のリスト
-    """
-    # 1. 吹き出しの中心座標を計算
-    bubble_centers = [(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2) for x1, y1, x2, y2 in bubble_coords]
-    
-    # 2. コマの右上の座標を取得
-    panel_x2, panel_y1 = panel_coords[2], panel_coords[1]
-    
-    # 3. 始点の吹き出しを決定
-    start_bubble = min(bubble_centers, key=lambda c: math.hypot(c[0] - panel_x2, c[1] - panel_y1))
-    start_index = bubble_centers.index(start_bubble)
-    
-    # 4. 最短経路を求める (ここではDijkstraのアルゴリズムを使用)
-    # 経路は吹き出しの中心座標を通る
-    path = dijkstra(bubble_centers, start_index, (panel_coords[0], panel_coords[3]))
-    
-    # 5. 経路の順序で吹き出しに番号を付ける
-    bubble_order = [bubble_centers.index(coord) for coord in path]
-    
-    return bubble_order
+import math
 
-def dijkstra(coords, start_index, goal):
-    """
-    coords: 吹き出しの中心座標のリスト
-    start_index: 始点のインデックス
-    goal: ゴールの座標 (x, y)
-    return: 最短経路の座標のリスト
-    """
-    # 1. 各頂点までの最短距離を保存するリスト
-    dist = [math.inf] * len(coords)
-    dist[start_index] = 0
+def get_distance(x1, y1, x2, y2):
+    """2点間の距離を計算する"""
+    return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+def find_nearest_balloon(panel, bounded_text):
+    """コマの右上座標に最も近い吹き出しを見つける"""
+    if not bounded_text:
+        return None
     
-    # 2. 各頂点までの最短距離の経路を保存するリスト
-    prev = [None] * len(coords)
+    panel_xmax, panel_ymax = int(panel['xmax']), int(panel['ymax'])
+    min_dist = float('inf')
+    nearest_balloon = None
     
-    # 3. 未確定の頂点の集合
-    Q = set(range(len(coords)))
+    for balloon in bounded_text:
+        try:
+            balloon_x = (int(balloon['xmin']) + int(balloon['xmax'])) / 2
+            balloon_y = (int(balloon['ymin']) + int(balloon['ymax'])) / 2
+            dist = get_distance(panel_xmax, panel_ymax, balloon_x, balloon_y)
+            if dist < min_dist:
+                min_dist = dist
+                nearest_balloon = balloon
+        except (ValueError, TypeError):
+            continue
     
-    # 4. メインのループ
-    while Q:
-        # 未確定の頂点のうち、最も距離が小さい頂点を取り出す
-        u = min(Q, key=lambda v: dist[v])
-        Q.remove(u)
+    return nearest_balloon
+
+
+def order_balloons(panel, bounded_text):
+    panel_xmin, panel_ymin = int(panel['xmin']), int(panel['ymin'])
+    start = find_nearest_balloon(panel, bounded_text)
+    
+    if start is None:
+        # bounded_textが空の場合など、適切に処理する
+        return []
+
+    start_xmin, start_ymin = int(start['xmin']), int(start['ymin'])
+    start_xmax, start_ymax = int(start['xmax']), int(start['ymax'])
+    start_x, start_y = (start_xmin + start_xmax) / 2, (start_ymin + start_ymax) / 2
+    ordered_balloons = [start]
+    unordered_balloons = [b for b in bounded_text if b != start]
+    
+    while unordered_balloons:
+        min_dist = float('inf')
+        nearest_balloon = None
         
-        # ゴールに到達したら終了
-        if coords[u] == goal:
-            break
+        for balloon in unordered_balloons:
+            balloon_xmin, balloon_ymin = int(balloon['xmin']), int(balloon['ymin'])
+            balloon_xmax, balloon_ymax = int(balloon['xmax']), int(balloon['ymax'])
+            balloon_x, balloon_y = (balloon_xmin + balloon_xmax) / 2, (balloon_ymin + balloon_ymax) / 2
+            dist = get_distance(start_x, start_y, balloon_x, balloon_y) + get_distance(balloon_x, balloon_y, panel_xmin, panel_ymin)
+            if dist < min_dist:
+                min_dist = dist
+                nearest_balloon = balloon
         
-        # 隣接する頂点を更新
-        for v in Q:
-            alt = dist[u] + math.hypot(coords[u][0] - coords[v][0], coords[u][1] - coords[v][1])
-            if alt < dist[v]:
-                dist[v] = alt
-                prev[v] = u
+        ordered_balloons.append(nearest_balloon)
+        unordered_balloons.remove(nearest_balloon)
+        start_xmin, start_ymin = int(nearest_balloon['xmin']), int(nearest_balloon['ymin'])
+        start_xmax, start_ymax = int(nearest_balloon['xmax']), int(nearest_balloon['ymax'])
+        start_x, start_y = (start_xmin + start_xmax) / 2, (start_ymin + start_ymax) / 2
     
-    # 5. 経路を復元
-    path = []
-    u = coords.index(goal)
-    while prev[u] is not None:
-        path.append(coords[u])
-        u = prev[u]
-    path.append(coords[u])
-    
-    return path[::-1]
+    return ordered_balloons
+
+
+
 
 if __name__ == '__main__':
     # パスの設定
@@ -87,16 +85,22 @@ if __name__ == '__main__':
     # 画像ファイル名を取得
     imgs = os.listdir(img_folder_path)
     imgs.sort()
+
     panels = get_panelbbox_info_from_xml(ano_file_path)
     balloons = get_textbbox_info_from_xml(ano_file_path)
+
     for page_index in balloons.keys():
         img_path = index_to_img_path(page_index, img_folder_path)
         print("img_path", img_path)
         for panel in panels[page_index]:
             print("panel", panel)
-            print("balloons", balloons[page_index])
             bounded_text = get_bounded_text(panel, balloons[page_index])
             print("bounded_text", bounded_text)
-    # panel_coords = (0, 0, 10, 10)
-    # bubble_coords = [(1, 1, 3, 3), (2, 2, 4, 4), (3, 3, 5, 5), (4, 4, 6, 6), (5, 5, 7, 7)]
-    # print(get_bubble_order(panel_coords, bubble_coords))  # => [0, 1, 2, 3, 4]
+            img = cv2.imread(img_path)
+            # draw_img = draw_bbox(img, [panel], (0, 255, 0))
+            # draw_img = draw_bbox(draw_img, bounded_text, (0, 0, 255))
+            # cv2.imshow("img", draw_img)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+            ordered_balloons = order_balloons(panel, bounded_text)
+            print("ordered_balloons", ordered_balloons)
