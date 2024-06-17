@@ -32,6 +32,34 @@ def get_baundingbox_info_from_xml(xml_file):
 
     return page_objects
 
+# アノテーションファイルからページごとにパネルのバウンディングボックス情報を取得
+def get_panelbbox_info_from_xml(xml_file):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    pages = root.findall(".//page")
+    page_objects = {}
+    for page in pages:
+        page_index = page.get("index")
+        # to int
+        page_index = int(page_index)
+        objects = []
+
+        for obj in page:
+            if obj.tag in ["frame"]:
+                obj_data = {
+                    "type": obj.tag,
+                    "id": obj.get("id"),
+                    "xmin": obj.get("xmin"),
+                    "ymin": obj.get("ymin"),
+                    "xmax": obj.get("xmax"),
+                    "ymax": obj.get("ymax"),
+                }
+                objects.append(obj_data)
+
+        page_objects[page_index] = objects
+
+    return page_objects
+
 
 # アノテーションファイルからページごとにテキストのバウンディングボックスのみ情報を取得
 def get_textbbox_info_from_xml(xml_file):
@@ -60,6 +88,50 @@ def get_textbbox_info_from_xml(xml_file):
         page_objects[page_index] = objects
 
     return page_objects
+
+def get_text_and_frame_bbox_info_from_xml(xml_file):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    pages = root.findall(".//page")
+    page_objects = {}
+    for page in pages:
+        page_index = page.get("index")
+        # to int
+        page_index = int(page_index)
+        objects = []
+
+        for obj in page:
+            if obj.tag in ["text", "frame"]:
+                obj_data = {
+                    "type": obj.tag,
+                    "id": obj.get("id"),
+                    "xmin": obj.get("xmin"),
+                    "ymin": obj.get("ymin"),
+                    "xmax": obj.get("xmax"),
+                    "ymax": obj.get("ymax"),
+                }
+                objects.append(obj_data)
+
+        page_objects[page_index] = objects
+
+    return page_objects
+
+def get_bounded_text(panel_info, text_info):
+    panel_xmin = int(panel_info["xmin"])
+    panel_ymin = int(panel_info["ymin"])
+    panel_xmax = int(panel_info["xmax"])
+    panel_ymax = int(panel_info["ymax"])
+
+    # 範囲内のテキストのバウンディングボックスを取得
+    bounded_text = []
+    for text in text_info:
+        text_xmin = int(text["xmin"])
+        text_ymin = int(text["ymin"])
+        text_xmax = int(text["xmax"])
+        text_ymax = int(text["ymax"])
+        if panel_xmin <= text_xmin and text_xmax <= panel_xmax and panel_ymin <= text_ymin and text_ymax <= panel_ymax:
+            bounded_text.append(text)
+    return bounded_text
 
 
 # 画像ファイル名をインデックスから取得

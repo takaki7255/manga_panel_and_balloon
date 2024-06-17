@@ -87,14 +87,16 @@ if __name__ == '__main__':
     # 画像ファイル名を取得
     imgs = os.listdir(img_folder_path)
     imgs.sort()
-    page_text_objects = get_textbbox_info_from_xml(ano_file_path)
-    print("page_objects", page_text_objects)
-    # for page_index in page_text_objects.keys():
-    #     img_path = index_to_img_path(page_index, img_folder_path)
-    #     print("img_path", img_path)
-    #     img = cv2.imread(img_path)
-    #     draw_bbox(img, page_text_objects[page_index], "./output/" + manga_title + "_" + str(page_index) + ".jpg")
-
-    panel_coords = (0, 0, 10, 10)
-    bubble_coords = [(1, 1, 3, 3), (2, 2, 4, 4), (3, 3, 5, 5), (4, 4, 6, 6), (5, 5, 7, 7)]
-    print(get_bubble_order(panel_coords, bubble_coords))  # => [0, 1, 2, 3, 4]
+    panels = get_panelbbox_info_from_xml(ano_file_path)
+    balloons = get_textbbox_info_from_xml(ano_file_path)
+    for page_index in balloons.keys():
+        img_path = index_to_img_path(page_index, img_folder_path)
+        print("img_path", img_path)
+        for panel in panels[page_index]:
+            print("panel", panel)
+            print("balloons", balloons[page_index])
+            bounded_text = get_bounded_text(panel, balloons[page_index])
+            print("bounded_text", bounded_text)
+    # panel_coords = (0, 0, 10, 10)
+    # bubble_coords = [(1, 1, 3, 3), (2, 2, 4, 4), (3, 3, 5, 5), (4, 4, 6, 6), (5, 5, 7, 7)]
+    # print(get_bubble_order(panel_coords, bubble_coords))  # => [0, 1, 2, 3, 4]
