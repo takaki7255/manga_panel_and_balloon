@@ -103,4 +103,10 @@ if __name__ == '__main__':
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
             ordered_balloons = order_balloons(panel, bounded_text)
+            drawimg = draw_bbox(img, [panel], "output.jpg")
+            for balloon in ordered_balloons:
+                drawimg = draw_bbox(drawimg, [balloon], "output.jpg")
+                cv2.imshow("img", drawimg)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
             print("ordered_balloons", ordered_balloons)
