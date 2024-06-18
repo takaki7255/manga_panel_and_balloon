@@ -78,7 +78,7 @@ if __name__ == '__main__':
     img_folders = os.listdir(manga109_img_dir)  # 画像フォルダのリスト
 
     # マンガのタイトルを指定
-    manga_title = "ARMS"
+    manga_title = "Belmondo"
     ano_file_path = manga109_ano_dir + manga_title + ".xml"
     img_folder_path = manga109_img_dir + manga_title + "/"
 
@@ -97,11 +97,11 @@ if __name__ == '__main__':
             bounded_text = get_bounded_text(panel, balloons[page_index])
             print("bounded_text", bounded_text)
             img = cv2.imread(img_path)
-            # draw_img = draw_bbox(img, [panel], (0, 255, 0))
+            draw_img = draw_bbox(img, [panel], (0, 255, 0))
             # draw_img = draw_bbox(draw_img, bounded_text, (0, 0, 255))
-            # cv2.imshow("img", draw_img)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
+            cv2.imshow("img", draw_img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
             ordered_balloons = order_balloons(panel, bounded_text)
             drawimg = draw_bbox(img, [panel], "output.jpg")
             for balloon in ordered_balloons:

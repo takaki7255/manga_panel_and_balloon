@@ -116,22 +116,45 @@ def get_text_and_frame_bbox_info_from_xml(xml_file):
 
     return page_objects
 
-def get_bounded_text(panel_info, text_info):
-    panel_xmin = int(panel_info["xmin"])
+# コマに内包されている吹き出しのバウンディングボックスを取得
+# デフォルト閾値は0.5
+def get_bounded_text(panel_info, text_info, iou_threshold=0.5):
+    panel_xmin = int(panel_info["xmin"]) 
     panel_ymin = int(panel_info["ymin"])
     panel_xmax = int(panel_info["xmax"])
     panel_ymax = int(panel_info["ymax"])
 
-    # 範囲内のテキストのバウンディングボックスを取得
+    panel_area = (panel_xmax - panel_xmin) * (panel_ymax - panel_ymin)
+
     bounded_text = []
     for text in text_info:
         text_xmin = int(text["xmin"])
-        text_ymin = int(text["ymin"])
+        text_ymin = int(text["ymin"]) 
         text_xmax = int(text["xmax"])
         text_ymax = int(text["ymax"])
-        if panel_xmin <= text_xmin and text_xmax <= panel_xmax and panel_ymin <= text_ymin and text_ymax <= panel_ymax:
+
+        # 重なっている領域の座標を計算
+        overlap_xmin = max(panel_xmin, text_xmin)
+        overlap_ymin = max(panel_ymin, text_ymin)
+        overlap_xmax = min(panel_xmax, text_xmax)
+        overlap_ymax = min(panel_ymax, text_ymax)
+
+        # 重なっている領域の面積を計算
+        overlap_area = max(0, overlap_xmax - overlap_xmin) * max(0, overlap_ymax - overlap_ymin)
+
+        # テキストのバウンディングボックスの面積を計算
+        text_area = (text_xmax - text_xmin) * (text_ymax - text_ymin)
+
+        # IoUを計算
+        iou = overlap_area / (panel_area + text_area - overlap_area)
+        print("iou", iou)
+
+        # IoUがしきい値以上なら、テキストを追加
+        if iou >= iou_threshold:
             bounded_text.append(text)
+
     return bounded_text
+
 
 
 # 画像ファイル名をインデックスから取得
