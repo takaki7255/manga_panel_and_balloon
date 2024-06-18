@@ -94,14 +94,27 @@ if __name__ == '__main__':
         print("img_path", img_path)
         for panel in panels[page_index]:
             print("panel", panel)
-            bounded_text = get_bounded_text(panel, balloons[page_index])
-            print("bounded_text", bounded_text)
+
             img = cv2.imread(img_path)
+
+            # 吹き出しの検出
+            speech_balloons = extractSpeechBalloon(img)
+
+            # コマ内の吹き出しを取得
+            # 入力をmanga109にする場合
+            # bounded_text = get_bounded_text(panel, balloons[page_index])
+            # 入力を画像処理による吹き出し検出結果にする場合
+            bounded_text = get_bounded_text(panel, speech_balloons)
+            print("bounded_text", bounded_text)
+
+            # print("speech_balloons", speech_balloons)
+            # draw_img = draw_bbox(img,speech_balloons, "output.jpg")
             draw_img = draw_bbox(img, [panel], (0, 255, 0))
             # draw_img = draw_bbox(draw_img, bounded_text, (0, 0, 255))
             cv2.imshow("img", draw_img)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
+            
             ordered_balloons = order_balloons(panel, bounded_text)
             drawimg = draw_bbox(img, [panel], "output.jpg")
             for balloon in ordered_balloons:

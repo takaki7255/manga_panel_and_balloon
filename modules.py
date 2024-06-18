@@ -192,3 +192,49 @@ def draw_bbox(img, page_objects, output_path):
     # cv2.imwrite(output_path, img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+def extractSpeechBalloon(img):
+    speech_balloons = []
+    if img is None:
+        return None
+    
+    # 画像がカラーの場合はグレースケールに変換
+    if len(img.shape) == 3:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = img
+    
+    # 画像の二値化
+    binary = cv2.threshold(gray, 230, 255, cv2.THRESH_BINARY)[1]
+    gaussian_img = cv2.GaussianBlur(gray, (3, 3), 0)
+    kernel = np.ones((3, 3), np.uint8)
+    binary = cv2.erode(binary, kernel, (-1, -1), iterations=1)
+    binary = cv2.dilate(binary, kernel, (-1, -1), iterations=1)
+    contours, _ = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    
+    for contour in contours:
+        # バウンディングボックスの座標を取得
+        x, y, w, h = cv2.boundingRect(contour)
+        area = cv2.contourArea(contour)
+        length = cv2.arcLength(contour, True)
+        en = 0.0
+        if (
+            gaussian_img.shape[0] * gaussian_img.shape[1] * 0.005 <= area
+            and area < gaussian_img.shape[0] * gaussian_img.shape[1] * 0.05
+        ):
+            en = 4.0 * np.pi * area / (length * length)
+        
+        # 一定のサイズ以上の輪郭のみを吹き出しとみなす
+        if en > 0.4:
+            speech_bubble = {
+                'type': 'text',
+                'xmin': str(x),
+                'ymin': str(y),
+                'xmax': str(x + w),
+                'ymax': str(y + h)
+            }
+            speech_balloons.append(speech_bubble)
+    
+    return speech_balloons
+
+
