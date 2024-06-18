@@ -119,34 +119,38 @@ def get_text_and_frame_bbox_info_from_xml(xml_file):
 # コマに内包されている吹き出しのバウンディングボックスを取得
 # デフォルト閾値は0.5
 def get_bounded_text(panel_info, text_info, iou_threshold=0.5):
-    panel_xmin = int(panel_info["xmin"]) 
+    panel_xmin = int(panel_info["xmin"])
     panel_ymin = int(panel_info["ymin"])
     panel_xmax = int(panel_info["xmax"])
     panel_ymax = int(panel_info["ymax"])
-
-    panel_area = (panel_xmax - panel_xmin) * (panel_ymax - panel_ymin)
+    # print(f'panel_xmin: {panel_xmin}, panel_ymin: {panel_ymin}, panel_xmax: {panel_xmax}, panel_ymax: {panel_ymax}')
 
     bounded_text = []
     for text in text_info:
         text_xmin = int(text["xmin"])
-        text_ymin = int(text["ymin"]) 
+        text_ymin = int(text["ymin"])
         text_xmax = int(text["xmax"])
         text_ymax = int(text["ymax"])
+        # print(f'text_xmin: {text_xmin}, text_ymin: {text_ymin}, text_xmax: {text_xmax}, text_ymax: {text_ymax}')
 
         # 重なっている領域の座標を計算
         overlap_xmin = max(panel_xmin, text_xmin)
         overlap_ymin = max(panel_ymin, text_ymin)
         overlap_xmax = min(panel_xmax, text_xmax)
         overlap_ymax = min(panel_ymax, text_ymax)
+        # print(f'overlap_xmin: {overlap_xmin}, overlap_ymin: {overlap_ymin}, overlap_xmax: {overlap_xmax}, overlap_ymax: {overlap_ymax}')
 
         # 重なっている領域の面積を計算
         overlap_area = max(0, overlap_xmax - overlap_xmin) * max(0, overlap_ymax - overlap_ymin)
+        # print("overlap_area", overlap_area)
 
-        # テキストのバウンディングボックスの面積を計算
+        # パネルとテキストのバウンディングボックスの面積を計算
+        panel_area = (panel_xmax - panel_xmin) * (panel_ymax - panel_ymin)
         text_area = (text_xmax - text_xmin) * (text_ymax - text_ymin)
+        # print(f'panel_area: {panel_area}, text_area: {text_area}')
 
         # IoUを計算
-        iou = overlap_area / (panel_area + text_area - overlap_area)
+        iou = overlap_area / text_area
         print("iou", iou)
 
         # IoUがしきい値以上なら、テキストを追加
@@ -154,6 +158,7 @@ def get_bounded_text(panel_info, text_info, iou_threshold=0.5):
             bounded_text.append(text)
 
     return bounded_text
+
 
 
 
