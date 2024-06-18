@@ -2,7 +2,6 @@ import math
 import os
 import cv2
 from modules import *
-
 import math
 
 def get_distance(x1, y1, x2, y2):
@@ -14,7 +13,7 @@ def find_nearest_balloon(panel, bounded_text):
     if not bounded_text:
         return None
     
-    panel_xmax, panel_ymax = int(panel['xmax']), int(panel['ymax'])
+    panel_xmax, panel_ymin = int(panel['xmax']), int(panel['ymin'])
     min_dist = float('inf')
     nearest_balloon = None
     
@@ -22,7 +21,8 @@ def find_nearest_balloon(panel, bounded_text):
         try:
             balloon_x = (int(balloon['xmin']) + int(balloon['xmax'])) / 2
             balloon_y = (int(balloon['ymin']) + int(balloon['ymax'])) / 2
-            dist = get_distance(panel_xmax, panel_ymax, balloon_x, balloon_y)
+            dist = get_distance(panel_xmax, panel_ymin, balloon_x, balloon_y)
+            print("dist", dist)
             if dist < min_dist:
                 min_dist = dist
                 nearest_balloon = balloon
