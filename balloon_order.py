@@ -3,6 +3,9 @@ import os
 import cv2
 from modules import *
 import math
+import numpy as np
+import itertools
+from scipy.spatial import distance_matrix
 
 def get_distance(x1, y1, x2, y2):
     """2点間の距離を計算する"""
@@ -67,6 +70,60 @@ def order_balloons(panel, bounded_text):
     
     return ordered_balloons
 
+# こちらを採用
+def order_balloons2(panel, bounded_text):
+    panel_xmax, panel_ymin = int(panel['xmax']), int(panel['ymin'])
+    start = find_nearest_balloon(panel, bounded_text)
+    if start is None:
+        return []
+    
+    start_point = [(int(start['xmin']) + int(start['xmax'])) / 2, (int(start['ymin']) + int(start['ymax'])) / 2]
+    end_point = [int(panel['xmin']), int(panel['ymax'])]
+    
+    # 吹き出しの中心座標を取得
+    points = []
+    for balloon in bounded_text:
+        center = [(int(balloon['xmin']) + int(balloon['xmax'])) / 2, (int(balloon['ymin']) + int(balloon['ymax'])) / 2]
+        points.append(center)
+        # スタート地点は除外
+        if center == start_point:
+            points.remove(center)
+    # 始点をstart_point,終点ををend_pointとして，pointsを全て通る最短経路を求める
+    points = [start_point] + points + [end_point]
+    print(f'points: {points}')
+    # 各点間の距離を計算
+    dist_matrix = distance_matrix(points, points)
+    
+    # 巡回経路となるインデックスを全列挙
+    N = len(points)
+    indices = np.arange(N)
+    paths = [p for p in itertools.permutations(indices[1:-1])]
+    
+    # 各巡回経路の総距離を計算し、最短経路を求める
+    best_dist = np.inf
+    best_path = None
+    for path in paths:
+        path = [0] + list(path) + [N-1]
+        dist = np.sum([dist_matrix[path[i], path[i+1]] for i in range(len(path)-1)])
+        if dist < best_dist:
+            best_dist = dist
+            best_path = path
+            
+    # 最短経路上の吹き出しをbounded_textから取得
+    ordered_balloons = []
+    for i in best_path[0:-1]:
+        point = points[i]
+        for balloon in bounded_text:
+            balloon_center = [(int(balloon['xmin']) + int(balloon['xmax'])) / 2, (int(balloon['ymin']) + int(balloon['ymax'])) / 2]
+            print(f'point: {point}, balloon_center: {balloon_center}')
+            if balloon_center == point:
+                ordered_balloons.append(balloon)
+            else:
+                print("not found")
+                
+                
+    return ordered_balloons
+
 
 
 
@@ -102,9 +159,9 @@ if __name__ == '__main__':
 
             # コマ内の吹き出しを取得
             # 入力をmanga109にする場合
-            # bounded_text = get_bounded_text(panel, balloons[page_index])
+            bounded_text = get_bounded_text(panel, balloons[page_index])
             # 入力を画像処理による吹き出し検出結果にする場合
-            bounded_text = get_bounded_text(panel, speech_balloons)
+            # bounded_text = get_bounded_text(panel, speech_balloons)
             print("bounded_text", bounded_text)
 
             # print("speech_balloons", speech_balloons)
@@ -115,7 +172,7 @@ if __name__ == '__main__':
             cv2.waitKey(0)
             cv2.destroyAllWindows()
             
-            ordered_balloons = order_balloons(panel, bounded_text)
+            ordered_balloons = order_balloons2(panel, bounded_text)
             drawimg = draw_bbox(img, [panel], "output.jpg")
             for balloon in ordered_balloons:
                 drawimg = draw_bbox(drawimg, [balloon], "output.jpg")
