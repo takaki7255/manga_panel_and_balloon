@@ -8,11 +8,24 @@ import itertools
 from scipy.spatial import distance_matrix
 
 def get_distance(x1, y1, x2, y2):
-    """2点間の距離を計算する"""
+    """
+    2点間の距離を計算する
+    :param x1: 点1のx座標
+    :param y1: 点1のy座標
+    :param x2: 点2のx座標
+    :param y2: 点2のy座標
+    :return: 2点間の距離
+    """
     return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 def find_nearest_balloon(panel, bounded_text):
-    """コマの右上座標に最も近い吹き出しを見つける"""
+    """
+    コマ右上の座標と最も近い吹き出しを見つける
+    :param panel: コマのバウンディングボックス情報
+    :param bounded_text: コマ内の吹き出しのバウンディングボックス情報
+    :return: 最も近い吹き出しのバウンディングボックス情報
+    :see also: get_distance 2点間の距離を計算する関数
+    """
     if not bounded_text:
         return None
     
@@ -36,6 +49,14 @@ def find_nearest_balloon(panel, bounded_text):
 
 
 def order_balloons(panel, bounded_text):
+    """
+    吹き出しの順番を決定する
+    :param panel: コマのバウンディングボックス情報
+    :param bounded_text: コマ内の吹き出しのバウンディングボックス情報
+    :return: 吹き出しの順番のリスト
+    :see also: find_nearest_balloon コマ右上の座標と最も近い吹き出しを見つける関数
+    :see also: get_distance 2点間の距離を計算する関数
+    """
     panel_xmin, panel_ymin = int(panel['xmin']), int(panel['ymin'])
     start = find_nearest_balloon(panel, bounded_text)
     
@@ -72,6 +93,14 @@ def order_balloons(panel, bounded_text):
 
 # こちらを採用
 def order_balloons2(panel, bounded_text):
+    """
+    吹き出しの順番を決定する(全順序)
+    :param panel: コマのバウンディングボックス情報
+    :param bounded_text: コマ内の吹き出しのバウンディングボックス情報
+    :return: 吹き出しの順番のリスト
+    :see also: find_nearest_balloon コマ右上の座標と最も近い吹き出しを見つける関数
+    :see also: get_distance 2点間の距離を計算する関数
+    """
     panel_xmax, panel_ymin = int(panel['xmax']), int(panel['ymin'])
     start = find_nearest_balloon(panel, bounded_text)
     if start is None:

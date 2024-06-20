@@ -6,6 +6,11 @@ import xml.etree.ElementTree as ET
 
 # アノテーションファイルからページごとにオブジェクトのバウンディングボックス情報を取得
 def get_baundingbox_info_from_xml(xml_file):
+    """
+    xmlファイルからページごとにオブジェクトのバウンディングボックス情報を取得
+    :param xml_file: アノテーションファイルのパス
+    :return: ページごとのオブジェクトのバウンディングボックス情報
+    """
     tree = ET.parse(xml_file)
     root = tree.getroot()
     pages = root.findall(".//page")
@@ -34,6 +39,11 @@ def get_baundingbox_info_from_xml(xml_file):
 
 # アノテーションファイルからページごとにパネルのバウンディングボックス情報を取得
 def get_panelbbox_info_from_xml(xml_file):
+    """
+    xmlファイルからページごとにパネルのバウンディングボックス情報を取得
+    :param xml_file: アノテーションファイルのパス
+    :return: ページごとのパネルのバウンディングボックス情報
+    """
     tree = ET.parse(xml_file)
     root = tree.getroot()
     pages = root.findall(".//page")
@@ -63,6 +73,11 @@ def get_panelbbox_info_from_xml(xml_file):
 
 # アノテーションファイルからページごとにテキストのバウンディングボックスのみ情報を取得
 def get_textbbox_info_from_xml(xml_file):
+    """
+    xmlファイルからページごとにテキストのバウンディングボックスのみ情報を取得
+    :param xml_file: アノテーションファイルのパス
+    :return: ページごとのテキストのバウンディングボックス情報
+    """
     tree = ET.parse(xml_file)
     root = tree.getroot()
     pages = root.findall(".//page")
@@ -90,6 +105,11 @@ def get_textbbox_info_from_xml(xml_file):
     return page_objects
 
 def get_text_and_frame_bbox_info_from_xml(xml_file):
+    """
+    xmlファイルからページごとにテキストとフレームのバウンディングボックス情報を取得
+    :param xml_file: アノテーションファイルのパス
+    :return: ページごとのテキストとフレームのバウンディングボックス情報
+    """
     tree = ET.parse(xml_file)
     root = tree.getroot()
     pages = root.findall(".//page")
@@ -119,6 +139,13 @@ def get_text_and_frame_bbox_info_from_xml(xml_file):
 # コマに内包されている吹き出しのバウンディングボックスを取得
 # デフォルト閾値は0.5
 def get_bounded_text(panel_info, text_info, iou_threshold=0.5):
+    """
+    吹き出しのバウンディングボックスのうち、パネルに内包されているものを取得
+    :param panel_info: パネルのバウンディングボックス情報
+    :param text_info: テキストのバウンディングボックス情報
+    :param iou_threshold: IoUの閾値
+    :return: パネルに内包されているテキストのバウンディングボックス情報
+    """
     panel_xmin = int(panel_info["xmin"])
     panel_ymin = int(panel_info["ymin"])
     panel_xmax = int(panel_info["xmax"])
@@ -164,12 +191,25 @@ def get_bounded_text(panel_info, text_info, iou_threshold=0.5):
 
 # 画像ファイル名をインデックスから取得
 def index_to_img_path(index, img_folder_path):
+    """
+    indexから画像ファイル名を取得
+    :param index: 画像のインデックス
+    :param img_folder_path: 画像フォルダのパス
+    :return: 画像ファイル名
+    """
     img_path = img_folder_path + str(index).zfill(3) + ".jpg"
     return img_path
 
 
 # バウンディングボックスを画像に描画
 def draw_bbox(img, page_objects, output_path):
+    """
+    バウンディングボックスを画像に描画
+    :param img: 画像
+    :param page_objects: バウンディングボックス情報
+    :param output_path: 出力画像のパス
+    :return img: バウンディングボックスが描画された画像
+    """
     colors = {
         "frame": (0, 255, 0),  # 緑
         "body": (255, 0, 0),  # 青
@@ -194,6 +234,11 @@ def draw_bbox(img, page_objects, output_path):
     cv2.destroyAllWindows()
 
 def extractSpeechBalloon(img):
+    """
+    画像から輪郭検出して吹き出しを抽出
+    :param img: 画像
+    :return: 吹き出しのバウンディングボックス情報
+    """
     speech_balloons = []
     if img is None:
         return None
