@@ -37,6 +37,7 @@ def get_baundingbox_info_from_xml(xml_file):
 
     return page_objects
 
+
 # アノテーションファイルからページごとにパネルのバウンディングボックス情報を取得
 def get_panelbbox_info_from_xml(xml_file):
     """
@@ -104,6 +105,7 @@ def get_textbbox_info_from_xml(xml_file):
 
     return page_objects
 
+
 def get_text_and_frame_bbox_info_from_xml(xml_file):
     """
     xmlファイルからページごとにテキストとフレームのバウンディングボックス情報を取得
@@ -135,6 +137,7 @@ def get_text_and_frame_bbox_info_from_xml(xml_file):
         page_objects[page_index] = objects
 
     return page_objects
+
 
 # コマに内包されている吹き出しのバウンディングボックスを取得
 # デフォルト閾値は0.5
@@ -178,15 +181,13 @@ def get_bounded_text(panel_info, text_info, iou_threshold=0.5):
 
         # IoUを計算
         iou = overlap_area / text_area
-        print("iou", iou)
+        # print("iou", iou)
 
         # IoUがしきい値以上なら、テキストを追加
         if iou >= iou_threshold:
             bounded_text.append(text)
 
     return bounded_text
-
-
 
 
 # 画像ファイル名をインデックスから取得
@@ -233,6 +234,7 @@ def draw_bbox(img, page_objects, output_path):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+
 def extractSpeechBalloon(img):
     """
     画像から輪郭検出して吹き出しを抽出
@@ -242,13 +244,13 @@ def extractSpeechBalloon(img):
     speech_balloons = []
     if img is None:
         return None
-    
+
     # 画像がカラーの場合はグレースケールに変換
     if len(img.shape) == 3:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     else:
         gray = img
-    
+
     # 画像の二値化
     binary = cv2.threshold(gray, 230, 255, cv2.THRESH_BINARY)[1]
     gaussian_img = cv2.GaussianBlur(gray, (3, 3), 0)
@@ -256,7 +258,7 @@ def extractSpeechBalloon(img):
     binary = cv2.erode(binary, kernel, (-1, -1), iterations=1)
     binary = cv2.dilate(binary, kernel, (-1, -1), iterations=1)
     contours, _ = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-    
+    mask = np.zeros_like(binary)
     for contour in contours:
         # バウンディングボックスの座標を取得
         x, y, w, h = cv2.boundingRect(contour)
@@ -264,22 +266,32 @@ def extractSpeechBalloon(img):
         length = cv2.arcLength(contour, True)
         en = 0.0
         if (
-            gaussian_img.shape[0] * gaussian_img.shape[1] * 0.005 <= area
+            gaussian_img.shape[0] * gaussian_img.shape[1] * 0.001 <= area
             and area < gaussian_img.shape[0] * gaussian_img.shape[1] * 0.05
         ):
             en = 4.0 * np.pi * area / (length * length)
-        
+
         # 一定のサイズ以上の輪郭のみを吹き出しとみなす
-        if en > 0.4:
-            speech_bubble = {
-                'type': 'text',
-                'xmin': str(x),
-                'ymin': str(y),
-                'xmax': str(x + w),
-                'ymax': str(y + h)
-            }
+        if en > 0.0:
+            cv2.drawContours(mask, [contour], -1, 255, -1)
+            masked_img = cv2.bitwise_and(img, img, mask=mask)
+            # cv2.imshow("masked_img", masked_img)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+            # 白黒比
+            white_pixel = np.sum(masked_img == 255)
+            black_pixel = np.sum(masked_img == 0)
+            # 白黒比を計算
+            if black_pixel + white_pixel > 0:
+                white_black_ratio = white_pixel / (black_pixel + white_pixel)
+            else:
+                white_black_ratio = 0
+            # cv2.imshow("masked_img", masked_img)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+            # if white_black_ratio > 0.01 and white_black_ratio < 0.15:
+            #     print(f"white_black_ratio: {white_black_ratio}")
+            speech_bubble = {"type": "text", "xmin": str(x), "ymin": str(y), "xmax": str(x + w), "ymax": str(y + h)}
             speech_balloons.append(speech_bubble)
-    
+
     return speech_balloons
-
-
