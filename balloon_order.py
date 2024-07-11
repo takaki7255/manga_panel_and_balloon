@@ -177,12 +177,12 @@ if __name__ == "__main__":
     img_folders = os.listdir(manga109_img_dir)  # 画像フォルダのリスト
 
     # マンガのタイトルを指定
-    manga_title = "Belmondo"
+    manga_title = "PrismHeart"
     # 実験時，画像を指定する場合
     # sitei = "005"
     # 実験時，manga109を指定する場合True, 画像処理による抽出を指定する場合False
-    # manga109 = True
-    manga109 = False
+    manga109 = True
+    # manga109 = False
     ano_file_path = manga109_ano_dir + manga_title + ".xml"
     img_folder_path = manga109_img_dir + manga_title + "/"
 
@@ -222,15 +222,15 @@ if __name__ == "__main__":
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
-            ordered_balloons = order_balloons(panel, bounded_text)
+            ordered_balloons = order_balloons2(panel, bounded_text)
             drawimg = draw_bbox(img, [panel], "output.jpg")
-            drawimg = draw_bbox(drawimg, ordered_balloons, "output.jpg")
+            # drawimg = draw_bbox(drawimg, ordered_balloons, "output.jpg")
             cv2.imshow("img", drawimg)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-            # for balloon in ordered_balloons:
-            #     drawimg = draw_bbox(drawimg, [balloon], "output.jpg")
-            #     cv2.imshow("img", drawimg)
-            #     cv2.waitKey(0)
-            #     cv2.destroyAllWindows()
+            for balloon in ordered_balloons:
+                drawimg = draw_bbox(drawimg, [balloon], "output.jpg")
+                cv2.imshow("img", drawimg)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
             # print("ordered_balloons", ordered_balloons)
