@@ -1,12 +1,9 @@
 import cv2
-import numpy as np
+import os
 
-# 幅1654,高さ1170の画像を作成
-img = np.zeros((1170, 1654, 3), np.uint8)
-# x = 46, y= 719の点に半径10の円を描画
-cv2.circle(img, (46, 719), 10, (0, 255, 0), -1)
-# x = 745, y =1166の点に半径10の円を描画
-cv2.circle(img, (745, 1166), 10, (0, 0, 255), -1)
-cv2.imshow("img", img)
-cv2.waitKey(0)
-cv2.waitKey()
+img = cv2.imread("./スクリーンショット 2024-07-15 17.22.44.png")
+bin = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+_, bin = cv2.threshold(bin, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+# 白黒比
+print((bin == 255).sum() / (bin == 0).sum())
+cv2.imwrite("output.jpg", bin)

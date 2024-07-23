@@ -91,7 +91,7 @@ if __name__ == "__main__":
     # マンガのタイトルを指定
     manga_title = "PrismHeart"
     # 実験時，画像を指定する場合
-    # sitei = "005"
+    sitei = "005"
     # 実験時，manga109を指定する場合True, 画像処理による抽出を指定する場合False
     manga109 = True
     # manga109 = False
@@ -105,5 +105,13 @@ if __name__ == "__main__":
     panels = get_panelbbox_info_from_xml(ano_file_path)
     for page_index in panels.keys():
         img_path = index_to_img_path(page_index, img_folder_path)
-        print("img_path", img_path)
+        # print("img_path", img_path)
+        # print("panels", panels[page_index])
+        if sitei not in img_path:
+            continue
+        img = cv2.imread(img_path)
+        page_height, page_width = img.shape[:2]
         print("panels", panels[page_index])
+        pseudo_regions = calculate_pseudo_regions(panels)
+        ordered_indices = order_panels(pseudo_regions, page_width, page_height)
+        print("コマの順序:", [panels[i]["id"] for i in ordered_indices])
