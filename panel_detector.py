@@ -1,3 +1,2 @@
-"""
-漫画画像からコマを抽出する
-"""
+import cv2
+import numpy as np

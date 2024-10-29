@@ -189,6 +189,48 @@ def get_bounded_text(panel_info, text_info, iou_threshold=0.5):
 
     return bounded_text
 
+def get_bouded_obj(panel, objs, iou_threshold=0.5):
+    """
+    パネルに内包されているオブジェクトのバウンディングボックス情報を取得
+    :param panel: パネルのバウンディングボックス情報
+    :param objs: オブジェクトのバウンディングボックス情報
+    :param iou_threshold: IoUの閾値
+    :return: パネルに内包されているオブジェクトのバウンディングボックス情報
+    """
+    panel_xmin = int(panel["xmin"])
+    panel_ymin = int(panel["ymin"])
+    panel_xmax = int(panel["xmax"])
+    panel_ymax = int(panel["ymax"])
+
+    bounded_objs = []
+    for obj in objs:
+        obj_xmin = int(obj["xmin"])
+        obj_ymin = int(obj["ymin"])
+        obj_xmax = int(obj["xmax"])
+        obj_ymax = int(obj["ymax"])
+
+        # 重なっている領域の座標を計算
+        overlap_xmin = max(panel_xmin, obj_xmin)
+        overlap_ymin = max(panel_ymin, obj_ymin)
+        overlap_xmax = min(panel_xmax, obj_xmax)
+        overlap_ymax = min(panel_ymax, obj_ymax)
+
+        # 重なっている領域の面積を計算
+        overlap_area = max(0, overlap_xmax - overlap_xmin) * max(0, overlap_ymax - overlap_ymin)
+
+        # パネルとオブジェクトのバウンディングボックスの面積を計算
+        panel_area = (panel_xmax - panel_xmin) * (panel_ymax - panel_ymin)
+        obj_area = (obj_xmax - obj_xmin) * (obj_ymax - obj_ymin)
+
+        # IoUを計算
+        iou = overlap_area / obj_area
+
+        # IoUがしきい値以上なら、オブジェクトを追加
+        if iou >= iou_threshold:
+            bounded_objs.append(obj)
+
+    return bounded_objs
+
 
 # 画像ファイル名をインデックスから取得
 def index_to_img_path(index, img_folder_path):
